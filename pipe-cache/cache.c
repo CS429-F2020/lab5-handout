@@ -7,7 +7,8 @@
  *  1. Each load/store can cause at most one cache miss. (I examined the trace,
  *  the largest request I saw was for 8 bytes).
  *  2. Instruction loads (I) are ignored.
- *  3. Cache is Write-Back always cache. On eviction, the line is always written to memory. 
+ *  3. Cache is a Write-Back cache. On eviction, write the cache line back
+ *  to memory if it's dirty.
  *
  * The function printSummary() is given to print output.
  * Please use this function to print the number of hits, misses and evictions.
@@ -62,6 +63,7 @@ int eviction_count = 0;
  */
 typedef struct cache_line {
     char valid;
+    char dirty;
     mem_addr_t tag;
     unsigned long long int lru;
     byte_t *data;
@@ -102,6 +104,7 @@ void initCache(int s_in, int b_in, int E_in)
         cache.sets[i].lines = (cache_line_t*) calloc(E, sizeof(cache_line_t));
         for (j=0; j<E; j++){
             cache.sets[i].lines[j].valid = 0;
+            cache.sets[i].lines[j].dirty = 0;
             cache.sets[i].lines[j].tag = 0;
             cache.sets[i].lines[j].lru = 0;
             cache.sets[i].lines[j].data = calloc(B, sizeof(byte_t));
@@ -168,7 +171,7 @@ bool check_hit(word_t pos)
  * Handles Misses, evicting from the cache if necessary. If evicted_pos and evicted_block
  * are not NULL, copy the evicted data and address out.
  * If block is not NULL, copy the data from block into the cache line. 
- * Return True if a line was evicted.
+ * Return True if a line was evicted, and the line is marked as dirty.
  */ 
 bool handle_miss(word_t pos, void *block, word_t *evicted_pos, void *evicted_block) 
 {
