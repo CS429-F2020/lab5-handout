@@ -599,7 +599,11 @@ static byte_t sim_step()
 			case I_NOP: break;
 		
 			case I_RRMOVQ: // aka CMOVQ
+				cnd = cond_holds(cc, ifun);
 				vale = vala;
+				if (!cnd) {
+					destE = REG_NONE;
+				}
 				break;
 
 			case I_IRMOVQ:
@@ -611,7 +615,7 @@ static byte_t sim_step()
 				break;
 				
 			case I_MRMOVQ:
-				vale = valb + vala;
+				vale = valb + valc;
 				break;
 
 			case I_ALU:
